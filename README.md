@@ -35,5 +35,5 @@ First go to the bin directory
 ## Checking
 
 We can use tcpdump to analyze packets
-tcpdump -i em0 "icmp[0] == 8"
-tcpdump -i eth0 "icmp6 && ip6[40] == 128"
+>tcpdump -i em0 "icmp[0] == 8"  
+>tcpdump -i eth0 "icmp6 && ip6[40] == 128"
