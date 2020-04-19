@@ -56,6 +56,12 @@ int lookup_host(const char *host);
 unsigned short icmp6Checksum(unsigned short *buffer, int icmplen);
 int setTtl();
 
+/**
+ * Print command options and usage
+ *
+ * @param progname Name of the command.
+ * @return sum of `values`, or 0.0 if `values` is empty.
+ */
 void usage(char *progname)
 {
     printf("usage: %s [options] <host> \n", progname);
@@ -80,6 +86,10 @@ void handler(int signo)
     stop = 1;
 }
 
+/**
+ * Thread to send packets
+ *
+ */
 void *send_packet(void *p)
 {
     int packetsize, sec_no = 1;
@@ -122,6 +132,11 @@ void *send_packet(void *p)
     return(0);
 }
 
+
+/**
+ * Thread to receive packets
+ *
+ */
 void *recv_packet(void *p)
 {
     struct timeval tvrecv;
@@ -270,12 +285,29 @@ int main(int argc, char *argv[])
     return(0);
 }
 
+
+/**
+ * Calculates difference in timeval in milliseconds
+ *
+ * @param out timeval of outgoing packet.
+ * @param in timeval of incoming packet.
+ * @return difference in timeval in milliseconds.
+ */
 float diff_ms(struct timeval *out, struct timeval *in)
 {
     return((float)(((in->tv_sec - out->tv_sec) * 1000000) + (in->tv_usec - out->tv_usec)) / 1000.0);
 }
 
-int initIcmp4Header(char *buf, int datasize)
+
+/**
+ * Fills in the ICMPv4 header
+ *
+ * @param buf buffer to fill in the header values.
+ * @param datasize size of the ICMP payload.
+ * @param seqno sequence number to be filled in header.
+ * @return size of the ICMPv4 packet.
+ */
+int initIcmp4Header(char *buf, int datasize, int seqno)
 {
     struct icmp   *icmp_hdr = NULL;
     struct timeval *tval;
@@ -286,7 +318,7 @@ int initIcmp4Header(char *buf, int datasize)
     icmp_hdr->icmp_code     = 0;
     icmp_hdr->icmp_id       = pid;
     icmp_hdr->icmp_cksum    = 0;
-    icmp_hdr->icmp_seq      = 0;
+    icmp_hdr->icmp_seq      = seqno;
 
     datapart = buf + sizeof(struct icmp);
     memset(datapart, '0', datasize);
@@ -296,7 +328,16 @@ int initIcmp4Header(char *buf, int datasize)
     return(sizeof(struct icmp)+datalen);
 }
 
-int initIcmp6Header(char *buf, int datasize)
+
+/**
+ * Fills in the ICMPv6 header
+ *
+ * @param buf buffer to fill in the header values.
+ * @param datasize size of the ICMP payload.
+ * @param seqno sequence number to be filled in header.
+ * @return size of the ICMPv6 packet.
+ */
+int initIcmp6Header(char *buf, int datasize, int seqno)
 {
     struct icmp6_hdr    *icmp6_hdr = NULL;
     struct timeval *tval;
@@ -308,7 +349,7 @@ int initIcmp6Header(char *buf, int datasize)
     icmp6_hdr->icmp6_cksum    = 0;
 
     icmp6_hdr->icmp6_dataun.icmp6_un_data16[0] = htons(pid); /* identifier */
-    icmp6_hdr->icmp6_dataun.icmp6_un_data16[1] = htons(0); /* sequence no */
+    icmp6_hdr->icmp6_dataun.icmp6_un_data16[1] = htons(seqno); /* sequence no */
 
     datapart = (char *)buf + sizeof(struct icmp6_hdr);
     memset(datapart, '0', datasize);
@@ -318,6 +359,13 @@ int initIcmp6Header(char *buf, int datasize)
     return(sizeof(struct icmp6_hdr)+datalen);
 }
 
+/**
+ * Fills in the ICMPv4 header
+ *
+ * @param buffer buffer to calculate the checksum of.
+ * @param size length of the buffer for which checksum is to be evaluated.
+ * @return checksum of the given buffer.
+ */
 unsigned short checksum(unsigned short *buffer, int size)
 {
     unsigned long cksum=0;
@@ -337,6 +385,12 @@ unsigned short checksum(unsigned short *buffer, int size)
     return (unsigned short)(~cksum);
 }
 
+/**
+ * Wrapper to calculate checksum of both ICMPv4 and ICMPv6
+ *
+ * @param buffer buffer to calculate the checksum of.
+ * @param packetlen length of the buffer for which checksum is to be evaluated.
+ */
 void ComputeIcmpChecksum(char *buf, int packetlen)
 {
     struct icmp *icmpv4 = NULL;
@@ -356,23 +410,38 @@ void ComputeIcmpChecksum(char *buf, int packetlen)
     }
 }
 
+
+/**
+ * Wrapper to fill ICMPv4 and ICMPv6 headers
+ *
+ * @param pack_no sequence number to be filled in headers.
+ * @return packsize length of the packet.
+ */
 int pack(int pack_no)
 {
     int packsize;
 
     if (gAddressFamily == AF_INET)
     {
-        packsize = initIcmp4Header(sendpacket, datalen);
+        packsize = initIcmp4Header(sendpacket, datalen, pack_no);
     }
     else if (gAddressFamily == AF_INET6)
     {
-        packsize = initIcmp6Header(sendpacket, datalen);
+        packsize = initIcmp6Header(sendpacket, datalen, pack_no);
     }
     ComputeIcmpChecksum(sendpacket, packsize);
 
     return packsize;
 }
 
+
+/**
+ * Prints the RTT value of the received ECHO REPLY
+ *
+ * @param buffer cointaing the packet.
+ * @param len length of the packet.
+ * @param tvrecv structure containing the timeval of the received packet.
+ */
 void printRtt(char *buf, int len, struct timeval *tvrecv)
 {
     struct ip *ip;
@@ -438,6 +507,13 @@ void printRtt(char *buf, int len, struct timeval *tvrecv)
     }
 }
 
+
+/**
+ * Finds the IP of the provited hostname
+ *
+ * @param host hostname.
+ * @return 0 if success or -1 if error.
+ */
 int lookup_host(const char *host)
 {
     struct addrinfo hints, *res;
@@ -474,6 +550,14 @@ int lookup_host(const char *host)
     return(0);
 }
 
+
+/**
+ * Calculate the checksum of the ICMPv6 pseudo header
+ *
+ * @param buffer buffer containing the packet.
+ * @param icmplen length of the packet.
+ * @return checksum of the ICMPv6 header.
+ */
 unsigned short icmp6Checksum(unsigned short *buffer, int icmplen)
 {
     char tmp[PACKET_SIZE] = {'\0'}, *ptr = NULL, proto = 0;
@@ -526,6 +610,12 @@ unsigned short icmp6Checksum(unsigned short *buffer, int icmplen)
     return checksum((unsigned short *)tmp, total);
 }
 
+
+/**
+ * Set TTL value
+ *
+ * @return 0 if success or -1 if error.
+ */
 int setTtl()
 {
     int optlevel = 0,
@@ -558,7 +648,3 @@ int setTtl()
 
     return rc;
 }
-
-
-// tcpdump -i em0 "icmp[0] == 8"
-// tcpdump -i eth0 "icmp6 && ip6[40] == 128"
