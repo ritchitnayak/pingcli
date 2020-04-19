@@ -1,3 +1,9 @@
+/*
+ * Author: Ritchit Nayak
+ * Purpose: A simple ping CLI tool.
+ * Language:  C
+ */
+
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/time.h>
