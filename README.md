@@ -5,8 +5,8 @@ This is a small Ping CLI application for MacOS or Linux. The CLI app should acce
 
 ## Requirements
 
-Language : C11 and header files  
-Compiler : GCC
+* Language : C11 and header files  
+* Compiler : GCC
 
 ## Installation
 First go to the bin directory
