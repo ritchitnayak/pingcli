@@ -5,24 +5,24 @@ This is a a small Ping CLI application for MacOS or Linux. The CLI app should ac
 
 ## Requirements
 
-Language : C11 and header files
+Language : C11 and header files  
 Compiler : GCC
 
 ## Installation
 First go to the bin directory
-> cd ping_cli_directory
+> cd ping_cli_directory  
 > make all
 
 ## Usage
 
-> cd pingcli/bin
-> sudo ./ping [options] host
-> host - Remote machine to ping
+> cd pingcli/bin  
+> sudo ./ping [options] host  
+> host - Remote machine to ping  
 >
 ### option
-> -a 4/6  Address family (IPv4/IPv6)
-> -s sender ip
-> -t [TTL] TTL value to set
+> -a 4/6  Address family (IPv4/IPv6)  
+> -s sender ip  
+> -t [TTL] TTL value to set  
 
 ## Example
 
