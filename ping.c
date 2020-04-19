@@ -73,6 +73,11 @@ void usage(char *progname)
     return;
 }
 
+/**
+ * Print ping statistics
+ *
+ * @param signo signal received.
+ */
 void statistics(int signo)
 {
     printf("\n--------------------PING statistics-------------------\n");
@@ -81,6 +86,12 @@ void statistics(int signo)
     exit(1);
 }
 
+
+/**
+ * Handler to stop sending and receiving threads
+ *
+ * @param signo signal received.
+ */
 void handler(int signo)
 {
     stop = 1;
@@ -199,38 +210,38 @@ int main(int argc, char *argv[])
     }
 
     while((opt = getopt(argc, argv, ":a:s:t:")) != -1)
-	  {
-		    switch(opt)
-		    {
-			       case 'a':
-                 if(strcmp("4", optarg) == 0)
-                 {
+    {
+        switch(opt)
+        {
+            case 'a':
+                if(strcmp("4", optarg) == 0)
+                {
                     gAddressFamily = AF_INET;
                     gProtocol = IPPROTO_ICMP;
-                 }
-                 else if(strcmp("6", optarg) == 0)
-                 {
+                }
+                else if(strcmp("6", optarg) == 0)
+                {
                     gAddressFamily = AF_INET6;
                     gProtocol = IPPROTO_ICMPV6;
-                 }
-                 else
-                 {
+                }
+                else
+                {
                     usage("ping");
                     exit(1);
-                 }
-				         break;
-             case 's':
-                 inet_pton(AF_INET6, optarg, &self_addr6.sin6_addr);
-                 break;
-             case 't':
-                 gTtl = atoi(optarg);
-                 break;
-			       case '?':
-				         printf("unknown option: %c\n", optopt);
-                 usage("ping");
-				         break;
-		      }
-	   }
+                }
+                break;
+            case 's':
+                inet_pton(AF_INET6, optarg, &self_addr6.sin6_addr);
+                break;
+            case 't':
+                gTtl = atoi(optarg);
+                break;
+            case '?':
+              printf("unknown option: %c\n", optopt);
+              usage("ping");
+              break;
+        }
+    }
 
     if ((sockfd = socket(gAddressFamily, SOCK_RAW, gProtocol)) < 0)
     {
